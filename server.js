@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-const port = 3000;
+const db = require("./db");
 
 const people = [
   { id: 1, name: "hans" },
@@ -21,8 +21,14 @@ app.get("/people/:id", function (req, res) {
   res.send(people[id]);
 });
 
-app.get("/people", function (req, res) {
-  res.send(people);
+app.get("/people", async function (req, res) {
+  try {
+    let result = await db.query("select * from people");
+    res.send(result);
+  } catch (error) {
+    res.status(404).send(error.message);
+  }
+  console.log(result);
 });
 
 app.post("/people", function (req, res) {
