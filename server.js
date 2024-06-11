@@ -1,6 +1,11 @@
 const express = require("express");
 const app = express();
+const bodyParser = require("body-parser");
 app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+const port = 3000;
+
 const people = [
   { id: 1, name: "hans" },
   { id: 2, name: "sepp" },
@@ -19,6 +24,7 @@ app.post("/people", function (req, res) {
   let person = req.body;
   people.push(person);
   res.send(person);
+  console.log(req.body);
 });
 
 app.put("/people/:name", function (req, res) {
