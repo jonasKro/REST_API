@@ -16,43 +16,72 @@ app.get("/", function (req, res) {
   res.send("Hello World");
 });
 
-app.get("/people/:id", function (req, res) {
-  let id = req.params.id;
-  res.send(people[id]);
+app.get("/people/:id", async function (req, res) {
+  let id = parseInt(req.params.id, 10);
+  try {
+    const [rows] = await db.query("SELECT * FROM people WHERE id = ?", [id]);
+    if (rows.length > 0) {
+      res.send(rows[0]);
+    } else {
+      res.status(404).send("Person not found");
+    }
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 });
 
 app.get("/people", async function (req, res) {
   try {
-    let result = await db.query("select * from people");
+    let rows = await db.query("select * from people");
+    res.send(rows);
+  } catch (error) {
+    res.status(404).send(error.message);
+  }
+});
+
+app.post("/people", async function (req, res) {
+  let person = req.body;
+  let sql = "insert into people values(?,?,?)";
+  try {
+    let result = await db.query(sql, [
+      person.id,
+      person.firstname,
+      person.lastname,
+    ]);
     res.send(result);
   } catch (error) {
     res.status(404).send(error.message);
   }
-  console.log(result);
 });
 
-app.post("/people", function (req, res) {
-  let person = req.body;
-  people.push(person);
-  res.send(person);
-  console.log(req.body);
+app.put("/people/:id", async function (req, res) {
+  let id = parseInt(req.params.id, 10);
+  let newName = req.body.name;
+  let sql = "UPDATE people SET firstname = ? WHERE id = ?";
+  try {
+    const [result] = await db.query(sql, [newName, id]);
+    if (result.affectedRows > 0) {
+      res.send({ id, firstname: newName });
+    } else {
+      res.status(404).send("Person not found");
+    }
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 });
 
-app.put("/people/:name", function (req, res) {
-  const newName = req.params.name;
-  const newPerson = { id: people.length + 1, name: newName };
-  people.push(newPerson);
-  res.send(newPerson);
-});
-
-app.delete("/people/:id", function (req, res) {
-  const id = req.params.id;
-
-  if (id >= 0 && id < people.length) {
-    const deletedPerson = people.splice(id, 1);
-    res.send(deletedPerson[0]);
-  } else {
-    res.status(404).send("Person not found");
+app.delete("/people/:id", async function (req, res) {
+  let id = parseInt(req.params.id, 10);
+  let sql = "DELETE FROM people WHERE id = ?";
+  try {
+    const [result] = await db.query(sql, [id]);
+    if (result.affectedRows > 0) {
+      res.send(`Person with ID ${id} deleted successfully`);
+    } else {
+      res.status(404).send("Person not found");
+    }
+  } catch (error) {
+    res.status(500).send(error.message);
   }
 });
 
