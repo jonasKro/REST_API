@@ -16,6 +16,11 @@ app.get("/", function (req, res) {
   res.send("Hello World");
 });
 
+app.get("/people/:id", function (req, res) {
+  let id = req.params.id;
+  res.send(people[id]);
+});
+
 app.get("/people", function (req, res) {
   res.send(people);
 });
